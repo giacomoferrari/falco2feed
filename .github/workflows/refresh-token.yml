@@ -1,0 +1,37 @@
+name: Refresh Instagram Token
+
+on:
+  schedule:
+    - cron: '0 10 1 * *'   # 1° del mese
+    - cron: '0 10 20 * *'  # 20° del mese
+  workflow_dispatch:        # manuale
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Refresh token
+        env:
+          INSTAGRAM_APP_ID: ${{ secrets.INSTAGRAM_APP_ID }}
+          INSTAGRAM_APP_SECRET: ${{ secrets.INSTAGRAM_APP_SECRET }}
+          INSTAGRAM_USER_ID: ${{ secrets.INSTAGRAM_USER_ID }}
+        run: npm run refresh
+
+      - name: Commit updated token
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add token.json
+          git diff --staged --quiet || git commit -m "chore: refresh Instagram token"
+          git push
